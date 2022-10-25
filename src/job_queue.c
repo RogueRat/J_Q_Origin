@@ -5,12 +5,12 @@
 #include "job_queue.h"
 
 int job_queue_init(struct job_queue *job_queue, int capacity) {
-  job_queue -> capacity = capacity;
-  job_queue -> size = 0;
-  job_queue -> front = (void*)malloc(
-    capacity * sizeof(void*));;
-  job_queue -> index = 0;
-  job_queue -> back = (capacity - 1) * sizeof(void*);
+  job_queue->capacity = capacity;
+  job_queue->size = 0;
+  job_queue->start = (void*)malloc(
+    capacity * sizeof(void*));
+  job_queue->front = 0;
+  job_queue->back = (capacity - 1) * sizeof(void*);
   
   return 1;  
 }
