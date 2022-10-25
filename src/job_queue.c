@@ -22,7 +22,12 @@ int job_queue_destroy(struct job_queue *job_queue) {
 }
 
 int job_queue_push(struct job_queue *job_queue, void *data) {
-  
+  while(job_queue->size >= job_queue->capacity);
+  job_queue->start + (job_queue->back * sizeof(void*)) = data;
+  job_queue->back++;
+  if(job_queue->back >= job_queue->capacity) {
+    job_queue->back = 0;
+  }
 }
 
 int job_queue_pop(struct job_queue *job_queue, void **data) {
