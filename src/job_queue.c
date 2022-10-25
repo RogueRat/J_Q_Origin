@@ -6,7 +6,7 @@
 
 int job_queue_init(struct job_queue *job_queue, int capacity) {
   struct job_queue* job_queue = (struct job_queue*)malloc(
-    sizeof(job_queue)); // kan være at det er capacity der skal bruges :)
+    capacity);
   job_queue -> size = capacity;
   job_queue -> front = 0;
   job_queue -> back = capacity - 1;
