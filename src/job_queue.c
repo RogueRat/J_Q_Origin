@@ -10,7 +10,8 @@ int job_queue_init(struct job_queue *job_queue, int capacity) {
   job_queue -> capacity = capacity;
   job_queue -> size = capacity;
   job_queue -> front = 0;
-  job_queue -> back = capacity - 1;
+  job_queue -> index = 0;
+  //job_queue -> back = capacity - 1;
   
   return 1;  
 }
@@ -26,5 +27,19 @@ int job_queue_push(struct job_queue *job_queue, void *data) {
 }
 
 int job_queue_pop(struct job_queue *job_queue, void **data) {
-  assert(0);
+  /*if (Empty(job_queue)){
+  }
+  //else if(//job_queue -> index //findes)
+  {
+    //remove element
+  }
+  //else if (job_queue_destroy(job_queue))
+  {
+    return -1;
+  }
+  else{
+    return 1;
+  }*/
+  
+  
 }
