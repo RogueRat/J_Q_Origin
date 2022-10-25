@@ -8,6 +8,7 @@ struct job_queue {
   int back;
   int front;
   int capacity;
+  int index;
 };
 
 // Initialise a job queue with the given capacity.  The queue starts out
