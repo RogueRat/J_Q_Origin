@@ -52,6 +52,17 @@ int main(int argc, char * const *argv) {
   }
 
   assert(0); // Initialise the job queue and some worker threads here.
+  struct job_queue *the_queue;
+  job_queue_init(the_queue, 100);
+  int i;
+  pthread_t tid0;
+  pthread_t tid1;
+  pthread_t * threads[] = {&tid0,&tid1};
+  for (i = 0; i<2; i++){
+    pthread_create(threads[i], NULL, workerfunc, (void*)threads[i]);
+  }  
+  
+
 
   // FTS_LOGICAL = follow symbolic links
   // FTS_NOCHDIR = do not change the working directory of the process
@@ -82,6 +93,6 @@ int main(int argc, char * const *argv) {
   fts_close(ftsp);
 
   assert(0); // Shut down the job queue and the worker threads here.
-
+  pthread_exit(NULL);
   return 0;
 }
