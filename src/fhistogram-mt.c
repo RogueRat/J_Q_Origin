@@ -22,6 +22,47 @@ pthread_mutex_t stdout_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #include "histogram.h"
 
+int global_histogram[8] = { 0 };
+
+int fhistogram(char const *path) {
+  FILE *f = fopen(path, "r");
+
+  int local_histogram[8] = { 0 };
+
+  if (f == NULL) {
+    fflush(stdout);
+    warn("failed to open %s", path);
+    return -1;
+  }
+
+  int i = 0;
+
+  char c;
+  while (fread(&c, sizeof(c), 1, f) == 1) {
+    i++;
+    update_histogram(local_histogram, c);
+    if ((i % 100000) == 0) {
+      merge_histogram(local_histogram, global_histogram);
+      print_histogram(global_histogram);
+    }
+  }
+
+  fclose(f);
+
+  merge_histogram(local_histogram, global_histogram);
+  print_histogram(global_histogram);
+
+  return 0;
+}
+
+void Work(struct job_queue* taskList){
+  void** data = malloc(sizeof(void**));
+  while(1){
+    job_queue_pop(taskList, data); 
+    fhistogram((char const*)*data);
+  }
+}
+
 int main(int argc, char * const *argv) {
   if (argc < 2) {
     err(1, "usage: paths...");
@@ -49,7 +90,13 @@ int main(int argc, char * const *argv) {
     paths = &argv[1];
   }
 
-  assert(0); // Initialise the job queue and some worker threads here.
+
+  pthread_t workers[num_threads];
+  for(int t = 0; t < num_threads; t++) {
+    
+  }
+  struct job_queue* taskList = malloc(sizeof(struct job_queue));
+  assert(job_queue_init(taskList, 100) == 0); // Initialise the job queue and some worker threads here.
 
   // FTS_LOGICAL = follow symbolic links
   // FTS_NOCHDIR = do not change the working directory of the process

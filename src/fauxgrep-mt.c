@@ -59,7 +59,7 @@ int main(int argc, char * const *argv) {
   pthread_t tid1;
   pthread_t * threads[] = {&tid0,&tid1};
   for (i = 0; i<2; i++){
-    pthread_create(threads[i], NULL, workerfunc, (void*)threads[i]);
+    //pthread_create(threads[i], NULL, workerfunc, (void*)threads[i]);
   }  
   
 

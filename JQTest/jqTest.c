@@ -2,11 +2,29 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <fts.h>
+#include <err.h>
 
 #include "jqTest.h"
 #include "jqThreadTest.h"
 
 int main() {
+
+  FTS *ftsp;
+  int fts_options = FTS_LOGICAL | FTS_NOCHDIR;
+  char* tf = "TESTFOLDER";
+  char* const* path = &tf;
+  if ((ftsp = fts_open(path, fts_options, NULL)) == NULL) {
+    err(1, "fts_open() failed");
+    return -1;
+  }
+  FTSENT *p;
+  p = fts_read(ftsp);
+  FILE *f = fopen(p->fts_path, "r");
+  char word[100];
+  fread(word, sizeof(char*), 2, f);
+  printf("%s", word);
+
   pthread_t thread1;
   
   pthread_create(&thread1, NULL, TestFunc1, NULL);
