@@ -28,7 +28,7 @@ char const* needle;
 
 int fauxgrep_file(char const *needle, char const *path) {
   FILE *f = fopen(path, "r");
-
+  
   if (f == NULL) {
     warn("failed to open %s", path);
     return -1;
@@ -55,17 +55,18 @@ int fauxgrep_file(char const *needle, char const *path) {
 
 void* worker (void* queue) {
   struct job_queue* the_queue = queue;
-  void** info = malloc(sizeof(void**)); 
+  void* info;// = malloc(sizeof(void*));
   while (the_queue->start != NULL ) {
     //pthread_mutex_lock(&stdout_mutex); 
-    job_queue_pop(the_queue, info);
-    fauxgrep_file(needle, (char const*)*info);
+    job_queue_pop(the_queue, &info);
+    printf("%s\n", (char*)info);
+    fauxgrep_file(needle, (char const*)info);
     //pthread_mutex_unlock(&stdout_mutex); 
   }
 }
 
 int main(int argc, char * const *argv) { // int argc, char * const *argv
-  printf ("hello");
+  //printf ("hello");
   if (argc < 2) {
     err(1, "usage: [-n INT] STRING paths...");
     exit(1);
@@ -128,8 +129,7 @@ int main(int argc, char * const *argv) { // int argc, char * const *argv
     case FTS_D:
       break;
     case FTS_F:
-      //assert(0); // Process the file p->fts_path, somehow.
-      job_queue_push(the_queue, (void*)strdup(p->fts_name));
+      assert(job_queue_push(the_queue, (void*)strdup(p->fts_path))== 0); // Process the file p->fts_path, somehow
       break;
     default:
       break;
