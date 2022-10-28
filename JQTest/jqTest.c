@@ -28,10 +28,24 @@ int main() {
   fread(word, sizeof(char*), 2, f);
   printf("%s", word);
 
-  pthread_t thread1;
+  //pthread_t thread1;
+  //pthread_create(&thread1, NULL, TestFunc1, NULL);
+  //pthread_join(thread1, NULL);
   
-  pthread_create(&thread1, NULL, TestFunc1, NULL);
-  pthread_join(thread1, NULL);
+  struct job_queue* jq2 = malloc(sizeof(struct job_queue));
+  job_queue_init(jq2, 3);
+  char* string = "Hello\n";
+  //void* vp;// = (void*)string;
+  void* vp;// = *vpp;
+  //void** vpp;// = &vp;
+  printf("First %s", string);
+  job_queue_push(jq2, (void*)string);
+  
+  job_queue_pop(jq2, &vp);
+  //printf("Pop2");
+  printf("Last %s\n", (char*)vp);
+  job_queue_destroy(jq2);
+  free(jq2);
   
   printf("job_queue_destroy() works: %s\n", jqTestDestroy());
   printf("\n");
@@ -61,7 +75,6 @@ void* TestFunc1() {
 char* jqTestDestroy() {
   struct job_queue* jq1 = malloc(sizeof(struct job_queue));
   job_queue_init(jq1, 3);
-  
   int result = job_queue_destroy(jq1);  
   
   free(jq1);
