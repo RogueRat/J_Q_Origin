@@ -26,7 +26,9 @@ int job_queue_destroy(struct job_queue *job_queue) {
 
 int job_queue_push(struct job_queue *job_queue, void *data) {
   if(job_queue->start == NULL) return 1;				// We set the start to NULL on destruction
-  while(job_queue->size >= job_queue->capacity){}			// Hold until there's space in the queue
+  while(job_queue->size >= job_queue->capacity){
+    if(job_queue->start == NULL) return -1;
+  }									// Hold until there's space in the queue
   void* vp = job_queue->start + (job_queue->back * sizeof(void*));	// "Index into" current queue back
   vp = data;								// Copy data to queue
   if(vp != data) return 2;						// Check that copy worked before updating the queue
@@ -40,7 +42,9 @@ int job_queue_push(struct job_queue *job_queue, void *data) {
 
 int job_queue_pop(struct job_queue *job_queue, void **data) { 
   if(job_queue->start == NULL) return -1; 
-  while (job_queue->size <= 0){} 					// Block until queue has content
+  while (job_queue->size <= 0) {
+    if(job_queue->start == NULL) return -1;
+  }									// Block until queue has content
   void* vp = job_queue->start + (job_queue->front * sizeof(void*));	// "Index into" current queue front
   data = &vp;								
   if(*data != vp) return 1;						// Check that the copy worked before we update the queue
