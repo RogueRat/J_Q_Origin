@@ -55,9 +55,9 @@ int fhistogram(char const *path) {
   return 0;
 }
 
-void Work(struct job_queue* taskList){
+void* work(struct job_queue* taskList){
   void** data = malloc(sizeof(void**));
-  while(1){
+  while(taskList->start != NULL){
     job_queue_pop(taskList, data); 
     fhistogram((char const*)*data);
   }
@@ -93,7 +93,7 @@ int main(int argc, char * const *argv) {
 
   pthread_t workers[num_threads];
   for(int t = 0; t < num_threads; t++) {
-    
+    pthread_create(&workers[t], NULL, work, (void*)taskList);
   }
   struct job_queue* taskList = malloc(sizeof(struct job_queue));
   assert(job_queue_init(taskList, 100) == 0); // Initialise the job queue and some worker threads here.
@@ -117,7 +117,7 @@ int main(int argc, char * const *argv) {
     case FTS_D:
       break;
     case FTS_F:
-      assert(0); // Process the file p->fts_path, somehow.
+      assert(job_queue_push(taskList, p->fts_path) == 0); // Process the file p->fts_path, somehow.
       break;
     default:
       break;

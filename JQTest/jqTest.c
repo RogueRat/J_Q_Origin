@@ -20,6 +20,9 @@ int main() {
   }
   FTSENT *p;
   p = fts_read(ftsp);
+  printf("Path: %s\n", p->fts_path);
+  p = fts_read(ftsp);
+  printf("Path: %s\n", p->fts_path);
   FILE *f = fopen(p->fts_path, "r");
   char word[100];
   fread(word, sizeof(char*), 2, f);
