@@ -59,7 +59,7 @@ void* worker (void* queue) {
   while (the_queue->start != NULL ) {
     //pthread_mutex_lock(&stdout_mutex); 
     job_queue_pop(the_queue, &info);
-    printf("%s\n", (char*)info);
+    //printf("%s\n", (char*)info);
     fauxgrep_file(needle, (char const*)info);
     //pthread_mutex_unlock(&stdout_mutex); 
   }
@@ -140,8 +140,9 @@ int main(int argc, char * const *argv) { // int argc, char * const *argv
 
   //assert(0); // Shut down the job queue and the worker threads here.
   job_queue_destroy(the_queue);
-  //for (int i = num_threads)
-  pthread_exit(NULL); //check if this actually closes all threads 
+  for (int i = 0; i < num_threads; i++) pthread_join(tarray[i], NULL);
+  free(the_queue);
+  //pthread_exit(NULL); //check if this actually closes all threads 
   return 0;
 }
 
