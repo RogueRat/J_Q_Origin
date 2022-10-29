@@ -53,8 +53,9 @@ void* worker (void* queue) {
   struct job_queue* the_queue = (struct job_queue*)queue; 
   void* info;
   while (the_queue->start != NULL ) {
-    job_queue_pop(the_queue, &info);
-    fauxgrep_file(needle, (char const*)info);
+    if (job_queue_pop(the_queue, &info)==0) {
+      fauxgrep_file(needle, (char const*)info);
+    }
   }
 }
 
@@ -64,9 +65,8 @@ int main(int argc, char * const *argv) {
     exit(1);
   }
 
-  clock_t start_t, end_t;
-  double total_t; 
-  start_t = clock(); 
+  time_t start_t;
+  start_t = time(NULL);
 
   int num_threads = 1;
   needle = argv[1];
@@ -94,7 +94,6 @@ int main(int argc, char * const *argv) {
   }
 
   // Initialise the job queue and some worker threads here.
-  printf ("\nNumber of threads: %d", num_threads);
   struct job_queue* the_queue = malloc(sizeof(struct job_queue));
   assert((job_queue_init(the_queue, 100))==0);
   
@@ -139,9 +138,8 @@ int main(int argc, char * const *argv) {
   }
   free(the_queue); 
 
-  end_t = clock(); 
-  total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC; 
-  printf ("\nRuntime: %f", total_t);
+  double runtime = (double)(time(NULL) - start_t); 
+  printf ("\nRuntime: %f\n", runtime);
 
   return 0;
 }
