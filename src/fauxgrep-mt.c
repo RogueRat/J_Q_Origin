@@ -1,6 +1,3 @@
-
-
-
 // Setting _DEFAULT_SOURCE is necessary to activate visibility of
 // certain header file contents on GNU/Linux systems.
 #define _DEFAULT_SOURCE
@@ -19,12 +16,11 @@
 #include <err.h>
 
 #include <pthread.h>
+#include <time.h>
 
 #include "job_queue.h"
 
-//struct job_queue* the_queue; 
 char const* needle; 
-//pthread_mutex_t stdout_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int fauxgrep_file(char const *needle, char const *path) {
   FILE *f = fopen(path, "r");
@@ -41,7 +37,7 @@ int fauxgrep_file(char const *needle, char const *path) {
 
   while (getline(&line, &linelen, f) != -1) {
     if (strstr(line, needle) != NULL) {
-      printf("%s:%d: %s", path, lineno, line);
+      printf("\n%s:%d: %s", path, lineno, line);
     }
 
     lineno++;
@@ -54,28 +50,27 @@ int fauxgrep_file(char const *needle, char const *path) {
 }
 
 void* worker (void* queue) {
-  struct job_queue* the_queue = queue;
-  void* info;// = malloc(sizeof(void*));
+  struct job_queue* the_queue = (struct job_queue*)queue; 
+  void* info;
   while (the_queue->start != NULL ) {
-    //pthread_mutex_lock(&stdout_mutex); 
     job_queue_pop(the_queue, &info);
-    printf("%s\n", (char*)info);
     fauxgrep_file(needle, (char const*)info);
-    //pthread_mutex_unlock(&stdout_mutex); 
   }
 }
 
-int main(int argc, char * const *argv) { // int argc, char * const *argv
-  //printf ("hello");
+int main(int argc, char * const *argv) { 
   if (argc < 2) {
     err(1, "usage: [-n INT] STRING paths...");
     exit(1);
   }
 
+  clock_t start_t, end_t;
+  double total_t; 
+  start_t = clock(); 
+
   int num_threads = 1;
   needle = argv[1];
   char * const *paths = &argv[2];
-
 
   if (argc > 3 && strcmp(argv[1], "-n") == 0) {
     // Since atoi() simply returns zero on syntax errors, we cannot
@@ -98,14 +93,13 @@ int main(int argc, char * const *argv) { // int argc, char * const *argv
     paths = &argv[2];
   }
 
-  //assert(0); // Initialise the job queue and some worker threads here.
+  // Initialise the job queue and some worker threads here.
+  printf ("\nNumber of threads: %d", num_threads);
   struct job_queue* the_queue = malloc(sizeof(struct job_queue));
-  job_queue_init(the_queue, 100);
+  assert((job_queue_init(the_queue, 100))==0);
   
-  pthread_t tarray [num_threads]; //= malloc(num_threads * sizeof(pthread_t)); create an array of threads 
-  for (int i = 0; i < num_threads; i++) { //input number of threads into array 
-    //tarray[i] = malloc(sizeof(tarray)); 
-    //pthread_create (&thread, NULL, fauxgreb_file, (needle, jqname)); 
+  pthread_t tarray [num_threads]; 
+  for (int i = 0; i < num_threads; i++) { 
     pthread_create(&tarray[i], NULL, worker, (void*)the_queue);
   }
 
@@ -138,127 +132,16 @@ int main(int argc, char * const *argv) { // int argc, char * const *argv
   
   fts_close(ftsp);
 
-  //assert(0); // Shut down the job queue and the worker threads here.
-  job_queue_destroy(the_queue);
-  //for (int i = num_threads)
-  pthread_exit(NULL); //check if this actually closes all threads 
+  //Shut down the job queue and the worker threads here.
+  assert((job_queue_destroy(the_queue))==0);
+  for (int i = 0; i < num_threads; i++) {
+    pthread_join (tarray[i], NULL); 
+  }
+  free(the_queue); 
+
+  end_t = clock(); 
+  total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC; 
+  printf ("\nRuntime: %f", total_t);
+
   return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*// Setting _DEFAULT_SOURCE is necessary to activate visibility of
-// certain header file contents on GNU/Linux systems.
-#define _DEFAULT_SOURCE
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fts.h>
-
-// err.h contains various nonstandard BSD extensions, but they are
-// very handy.
-#include <err.h>
-
-#include <pthread.h>
-
-#include "job_queue.h"
-
-int main(int argc, char * const *argv) {
-  if (argc < 2) {
-    err(1, "usage: [-n INT] STRING paths...");
-    exit(1);
-  }
-
-  int num_threads = 1;
-  char const *needle = argv[1];
-  char * const *paths = &argv[2];
-
-
-  if (argc > 3 && strcmp(argv[1], "-n") == 0) {
-    // Since atoi() simply returns zero on syntax errors, we cannot
-    // distinguish between the user entering a zero, or some
-    // non-numeric garbage.  In fact, we cannot even tell whether the
-    // given option is suffixed by garbage, i.e. '123foo' returns
-    // '123'.  A more robust solution would use strtol(), but its
-    // interface is more complicated, so here we are.
-    num_threads = atoi(argv[2]);
-
-    if (num_threads < 1) {
-      err(1, "invalid thread count: %s", argv[2]);
-    }
-
-    needle = argv[3];
-    paths = &argv[4];
-
-  } else {
-    needle = argv[1];
-    paths = &argv[2];
-  }
-
-  assert(0); // Initialise the job queue and some worker threads here.
-  struct job_queue *the_queue;
-  job_queue_init(the_queue, 100);
-  int i;
-  pthread_t tid0;
-  pthread_t tid1;
-  pthread_t * threads[] = {&tid0,&tid1};
-  for (i = 0; i<2; i++){
-    //pthread_create(threads[i], NULL, workerfunc, (void*)threads[i]);
-  }  
-  
-
-
-  // FTS_LOGICAL = follow symbolic links
-  // FTS_NOCHDIR = do not change the working directory of the process
-  //
-  // (These are not particularly important distinctions for our simple
-  // uses.)
-  int fts_options = FTS_LOGICAL | FTS_NOCHDIR;
-
-  FTS *ftsp;
-  if ((ftsp = fts_open(paths, fts_options, NULL)) == NULL) {
-    err(1, "fts_open() failed");
-    return -1;
-  }
-
-  FTSENT *p;
-  while ((p = fts_read(ftsp)) != NULL) {
-    switch (p->fts_info) {
-    case FTS_D:
-      break;
-    case FTS_F:
-      assert(0); // Process the file p->fts_path, somehow.
-      break;
-    default:
-      break;
-    }
-  }
-
-  fts_close(ftsp);
-
-  assert(0); // Shut down the job queue and the worker threads here.
-  pthread_exit(NULL);
-  return 0;
-}*/

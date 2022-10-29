@@ -14,6 +14,7 @@
 // err.h contains various nonstandard BSD extensions, but they are
 // very handy.
 #include <err.h>
+#include <time.h>
 
 int fauxgrep_file(char const *needle, char const *path) {
   FILE *f = fopen(path, "r");
@@ -47,6 +48,10 @@ int main(int argc, char * const *argv) {
     exit(1);
   }
 
+  clock_t start_t, end_t;
+  double total_t; 
+  start_t = clock();
+
   char const *needle = argv[1];
   char * const *paths = &argv[2];
 
@@ -77,6 +82,10 @@ int main(int argc, char * const *argv) {
   }
 
   fts_close(ftsp);
+
+  end_t = clock(); 
+  total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC; 
+  printf ("Runtime: %f", total_t);
 
   return 0;
 }
