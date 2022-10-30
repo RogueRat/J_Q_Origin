@@ -19,6 +19,7 @@ pthread_mutex_t stdout_mutex = PTHREAD_MUTEX_INITIALIZER;
 // err.h contains various nonstandard BSD extensions, but they are
 // very handy.
 #include <err.h>
+#include <time.h>
 
 #include "histogram.h"
 
@@ -42,29 +43,34 @@ int fhistogram(char const *path) {
     i++;
     update_histogram(local_histogram, c);
     if ((i % 100000) == 0) {
+      pthread_mutex_lock(&stdout_mutex);
       merge_histogram(local_histogram, global_histogram);
       print_histogram(global_histogram);
+      pthread_mutex_unlock(&stdout_mutex);
     }
   }
 
   fclose(f);
-
+  pthread_mutex_lock(&stdout_mutex);
   merge_histogram(local_histogram, global_histogram);
   print_histogram(global_histogram);
+  pthread_mutex_unlock(&stdout_mutex);
 
   return 0;
 }
 
 void* work(void* taskList){
   struct job_queue* tL = (struct job_queue*)taskList;
-  void** data = malloc(sizeof(void**));
-  while(tL->start != NULL){
-    job_queue_pop(tL, data); 
-    fhistogram((char const*)*data);
+  void* data = malloc(sizeof(void*));
+  while(job_queue_pop(tL, &data) == 0){ 
+    fhistogram((char const*)data);
   }
+  free(data);
 }
 
 int main(int argc, char * const *argv) {
+  time_t start_t;
+  start_t = time(NULL);
   if (argc < 2) {
     err(1, "usage: paths...");
     exit(1);
@@ -81,7 +87,7 @@ int main(int argc, char * const *argv) {
     // '123'.  A more robust solution would use strtol(), but its
     // interface is more complicated, so here we are.
     num_threads = atoi(argv[2]);
-
+    //printf("Number of threads: %d\n", num_threads);
     if (num_threads < 1) {
       err(1, "invalid thread count: %s", argv[2]);
     }
@@ -92,7 +98,8 @@ int main(int argc, char * const *argv) {
   }
 
   struct job_queue* taskList = malloc(sizeof(struct job_queue));
-  assert(job_queue_init(taskList, 100) == 0); // Initialise the job queue and some worker threads here.
+  assert(job_queue_init(taskList, 500) == 0); // Initialise the job queue and some worker threads here.
+  printf("Number of threads: %d\n", num_threads);
   pthread_t workers[num_threads];
   for(int t = 0; t < num_threads; t++) {
     pthread_create(&workers[t], NULL, work, (void*)taskList);
@@ -117,7 +124,7 @@ int main(int argc, char * const *argv) {
     case FTS_D:
       break;
     case FTS_F:
-      assert(job_queue_push(taskList, p->fts_path) == 0); // Process the file p->fts_path, somehow.
+      assert(job_queue_push(taskList, (void*)strdup(p->fts_path)) == 0); // Process the file p->fts_path, somehow.
       break;
     default:
       break;
@@ -126,9 +133,16 @@ int main(int argc, char * const *argv) {
 
   fts_close(ftsp);
 
-  assert(0); // Shut down the job queue and the worker threads here.
+  assert(job_queue_destroy(taskList) == 0); // Shut down the job queue and the worker threads here.
+  for(int t = 0; t < num_threads; t++) {
+    pthread_join(workers[t], NULL);
+  }
+  
+  free(taskList);
 
   move_lines(9);
-
+  
+  double runtime = (double)(time(NULL) - start_t);
+  printf("Runtime: %f seconds\n", runtime);
   return 0;
 }

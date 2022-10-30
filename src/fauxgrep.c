@@ -48,9 +48,8 @@ int main(int argc, char * const *argv) {
     exit(1);
   }
 
-  clock_t start_t, end_t;
-  double total_t; 
-  start_t = clock();
+  time_t start_t;
+  start_t = time(NULL);
 
   char const *needle = argv[1];
   char * const *paths = &argv[2];
@@ -83,9 +82,8 @@ int main(int argc, char * const *argv) {
 
   fts_close(ftsp);
 
-  end_t = clock(); 
-  total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC; 
-  printf ("Runtime: %f", total_t);
+  double total_t = (double)(time(NULL) - start_t); 
+  printf ("Runtime: %f\n", total_t);
 
   return 0;
 }

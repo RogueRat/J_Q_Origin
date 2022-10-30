@@ -20,9 +20,11 @@
 
 #include "job_queue.h"
 
+pthread_mutex_t stdout_mutex1 = PTHREAD_MUTEX_INITIALIZER;
+
 char const* needle; 
 
-int fauxgrep_file(char const *needle, char const *path) {
+int fauxgrep_file(char const *needle_c, char const *path) {
   FILE *f = fopen(path, "r");
   
   if (f == NULL) {
@@ -34,10 +36,10 @@ int fauxgrep_file(char const *needle, char const *path) {
   char *line = NULL;
   size_t linelen = 0;
   int lineno = 1;
-
-  while (getline(&line, &linelen, f) != -1) {
-    if (strstr(line, needle) != NULL) {
-      printf("\n%s:%d: %s", path, lineno, line);
+  
+  while (getline(&line, &linelen, f) != -1) {  
+    if (strstr(line, needle_c) != NULL) {
+      printf("%s:%d: %s", path, lineno, line);
     }
 
     lineno++;
@@ -52,14 +54,15 @@ int fauxgrep_file(char const *needle, char const *path) {
 void* worker (void* queue) {
   struct job_queue* the_queue = (struct job_queue*)queue; 
   void* info;
-  while (the_queue->start != NULL ) {
-    job_queue_pop(the_queue, &info);
-<<<<<<< HEAD
-    //printf("%s\n", (char*)info);
-=======
->>>>>>> b27961c1f691259438a6f33233e784478b45fbe6
-    fauxgrep_file(needle, (char const*)info);
+  char* needle_c = malloc(sizeof(char*)*strlen(needle));
+  for(int c = 0; c < strlen(needle); c++) {
+    needle_c[c] = needle[c];
   }
+  //printf("%s\n", needle_c);
+  while (job_queue_pop(the_queue, &info)==0) {
+    fauxgrep_file((char const*)needle_c, (char const*)info);
+  }
+  free(needle_c);
 }
 
 int main(int argc, char * const *argv) { 
@@ -68,9 +71,8 @@ int main(int argc, char * const *argv) {
     exit(1);
   }
 
-  clock_t start_t, end_t;
-  double total_t; 
-  start_t = clock(); 
+  time_t start_t;
+  start_t = time(NULL);
 
   int num_threads = 1;
   needle = argv[1];
@@ -98,9 +100,8 @@ int main(int argc, char * const *argv) {
   }
 
   // Initialise the job queue and some worker threads here.
-  printf ("\nNumber of threads: %d", num_threads);
   struct job_queue* the_queue = malloc(sizeof(struct job_queue));
-  assert((job_queue_init(the_queue, 100))==0);
+  assert((job_queue_init(the_queue, 500))==0);
   
   pthread_t tarray [num_threads]; 
   for (int i = 0; i < num_threads; i++) { 
@@ -136,13 +137,6 @@ int main(int argc, char * const *argv) {
   
   fts_close(ftsp);
 
-<<<<<<< HEAD
-  //assert(0); // Shut down the job queue and the worker threads here.
-  job_queue_destroy(the_queue);
-  for (int i = 0; i < num_threads; i++) pthread_join(tarray[i], NULL);
-  free(the_queue);
-  //pthread_exit(NULL); //check if this actually closes all threads 
-=======
   //Shut down the job queue and the worker threads here.
   assert((job_queue_destroy(the_queue))==0);
   for (int i = 0; i < num_threads; i++) {
@@ -150,10 +144,8 @@ int main(int argc, char * const *argv) {
   }
   free(the_queue); 
 
-  end_t = clock(); 
-  total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC; 
-  printf ("\nRuntime: %f", total_t);
+  double runtime = (double)(time(NULL) - start_t); 
+  printf ("\nRuntime: %f\n", runtime);
 
->>>>>>> b27961c1f691259438a6f33233e784478b45fbe6
   return 0;
 }
