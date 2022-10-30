@@ -15,6 +15,7 @@
 // err.h contains various nonstandard BSD extensions, but they are
 // very handy.
 #include <err.h>
+#include <time.h>
 
 #include "histogram.h"
 
@@ -52,6 +53,8 @@ int fhistogram(char const *path) {
 }
 
 int main(int argc, char * const *argv) {
+  time_t start_t;
+  start_t = time(NULL);
   if (argc < 2) {
     err(1, "usage: paths...");
     exit(1);
@@ -88,6 +91,8 @@ int main(int argc, char * const *argv) {
   fts_close(ftsp);
 
   move_lines(9);
-
+  
+  double runtime = (double)(time(NULL) - start_t);
+  printf("Runtime: %f seconds\n", runtime);
   return 0;
 }

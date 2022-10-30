@@ -20,9 +20,10 @@
 
 #include "job_queue.h"
 
+
 char const* needle; 
 
-int fauxgrep_file(char const *needle, char const *path) {
+int fauxgrep_file(char const *needle_c, char const *path) {
   FILE *f = fopen(path, "r");
   
   if (f == NULL) {
@@ -34,10 +35,10 @@ int fauxgrep_file(char const *needle, char const *path) {
   char *line = NULL;
   size_t linelen = 0;
   int lineno = 1;
-
-  while (getline(&line, &linelen, f) != -1) {
-    if (strstr(line, needle) != NULL) {
-      printf("\n%s:%d: %s", path, lineno, line);
+  
+  while (getline(&line, &linelen, f) != -1) {  
+    if (strstr(line, needle_c) != NULL) {
+      printf("%s:%d: %s", path, lineno, line);
     }
 
     lineno++;
@@ -52,11 +53,14 @@ int fauxgrep_file(char const *needle, char const *path) {
 void* worker (void* queue) {
   struct job_queue* the_queue = (struct job_queue*)queue; 
   void* info;
-  while (the_queue->start != NULL ) {
-    if (job_queue_pop(the_queue, &info)==0) {
-      fauxgrep_file(needle, (char const*)info);
-    }
+  char* needle_c = malloc(sizeof(char*)*strlen(needle));
+  for(int c = 0; c < strlen(needle); c++) {
+    needle_c[c] = needle[c];
   }
+  while (job_queue_pop(the_queue, &info)==0) {
+    fauxgrep_file((char const*)needle_c, (char const*)info);
+  }
+  free(needle_c);
 }
 
 int main(int argc, char * const *argv) { 
@@ -95,7 +99,7 @@ int main(int argc, char * const *argv) {
 
   // Initialise the job queue and some worker threads here.
   struct job_queue* the_queue = malloc(sizeof(struct job_queue));
-  assert((job_queue_init(the_queue, 100))==0);
+  assert((job_queue_init(the_queue, 500))==0);
   
   pthread_t tarray [num_threads]; 
   for (int i = 0; i < num_threads; i++) { 

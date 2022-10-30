@@ -21,3 +21,10 @@ clean:
 ../src.zip:
 	make clean
 	cd .. && zip src.zip -r src
+	
+testHisto: 
+	./fhistogram TestHistoM
+	./fhistogram-mt -n 2 TestHistoM
+	./fhistogram-mt -n 4 TestHistoM
+	./fhistogram-mt -n 6 TestHistoM
+	./fhistogram-mt -n 8 TestHistoM

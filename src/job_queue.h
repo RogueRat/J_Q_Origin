@@ -1,13 +1,16 @@
 #ifndef JOB_QUEUE_H
 #define JOB_QUEUE_H
 
+#include <stdbool.h>
 #include <pthread.h>
+#include <unistd.h>
 
 struct job_queue {
   int size;
   int back;
   int front;
   int capacity;
+  bool empty;
   void** start;
 };
 
