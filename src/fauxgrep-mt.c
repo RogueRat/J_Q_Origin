@@ -20,7 +20,6 @@
 
 #include "job_queue.h"
 
-pthread_mutex_t stdout_mutex1 = PTHREAD_MUTEX_INITIALIZER;
 
 char const* needle; 
 
@@ -58,7 +57,6 @@ void* worker (void* queue) {
   for(int c = 0; c < strlen(needle); c++) {
     needle_c[c] = needle[c];
   }
-  //printf("%s\n", needle_c);
   while (job_queue_pop(the_queue, &info)==0) {
     fauxgrep_file((char const*)needle_c, (char const*)info);
   }

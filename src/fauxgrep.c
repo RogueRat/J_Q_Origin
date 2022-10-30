@@ -82,8 +82,8 @@ int main(int argc, char * const *argv) {
 
   fts_close(ftsp);
 
-  double total_t = (double)(time(NULL) - start_t); 
-  printf ("Runtime: %f\n", total_t);
+  double runtime = (double)(time(NULL) - start_t); 
+  printf ("\nRuntime: %f\n", runtime);
 
   return 0;
 }
